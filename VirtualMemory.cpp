@@ -29,6 +29,7 @@ word_t findEmptyFrame()
 
 
 
+
 void dfs(uint64_t physicalAddress, word_t value)
 {
     PMread(physicalAddress, &value);
@@ -83,6 +84,9 @@ int VMwrite(uint64_t virtualAddress, word_t value)
                         (fullVirtualAddress >> OFFSET_WIDTH * i )
                                         % (2 << (OFFSET_WIDTH - 1));
     }
+
+
+
 
 
     word_t addr = 0;
