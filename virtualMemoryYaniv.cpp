@@ -59,9 +59,11 @@ void find_empty_table(uint64_t frame, int depth, uint64_t &max_frame, uint64_t &
             }
             return;
         }
+
         if(value > max_frame){
             max_frame = value;
         }
+
         if(value == 0)
         {
             counter += 1;
