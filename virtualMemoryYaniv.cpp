@@ -28,6 +28,7 @@ uint64_t distance(uint64_t a, uint64_t b)
 // zeros_father - the parent of the empty frame
 // zeros_vpn - the virtual address of the empty frame's page
 //
+
 void find_empty_table(uint64_t frame, int depth, uint64_t &max_frame, uint64_t &zeros_frame, uint64_t &zeros_father,
                       uint64_t &zeros_vpn, uint64_t &max_dis_frame, uint64_t &dis_father,uint64_t &dis_vpn, uint64_t vpn,
                       uint64_t real_vpn,uint64_t &max_dis)
@@ -35,6 +36,7 @@ void find_empty_table(uint64_t frame, int depth, uint64_t &max_frame, uint64_t &
 
     int counter = 0;
     word_t value;
+    // iterate through all rows of the current frame
     for (uint64_t j = 0; j < PAGE_SIZE; ++j)
     {
 
@@ -132,9 +134,13 @@ int find_page(uint64_t root, uint64_t vpn, uint64_t &pAddr)
         uint64_t p = page_table[j];
         /** PMread(0 + 5, &addr1) // first translation */
         PMread((add1*PAGE_SIZE) + p, &add2);
+
+
         if (add2 == 0)
         {
+
             uint64_t f1 = findUnusedFrame(vpn);
+
             if(j+1 == TABLES_DEPTH){
                 PMrestore(f1,vpn);
             }
