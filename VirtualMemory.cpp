@@ -42,8 +42,6 @@ pagesAddresses[TABLES_DEPTH])
 
 
 
-// ++++++++++++++++++++++++ TO CHANGE!!! +++++++++++++++++++++++++++
-
 void dfs(
         uint64_t fullVirtualAddress, uint64_t virtualAddress,
         uint64_t currentFrame, uint64_t currentDepth,
@@ -71,8 +69,6 @@ void dfs(
         {
             maxFrameVisited = rowValue;
         }
-
-
 
         // if we reached the end of the pm
         if(currentDepth == TABLES_DEPTH)
@@ -115,14 +111,14 @@ void dfs(
         }
     }
     // if we reached the end of the current frame and it's empty
-    if(emptySlotCounter == PAGE_SIZE &&
-            (virtualAddress >> (OFFSET_WIDTH * (TABLES_DEPTH - currentDepth)))
-            != fullVirtualAddress){
+    if(fullVirtualAddress != (virtualAddress >> ((TABLES_DEPTH - currentDepth)
+                                                 * OFFSET_WIDTH))
+       && emptySlotCounter == PAGE_SIZE)
+    {
         targetVirtualAddress = fullVirtualAddress;
         targetFrame = currentFrame;
     }
 }
-// ++++++++++++++++++++++++ END TO CHANGE +++++++++++++++++++++++++++
 
 
 
@@ -130,7 +126,6 @@ void dfs(
 uint64_t findEmptyFrame(uint64_t fullVirtualAddress)
 {
 
-// ++++++++++++++++++++++++ TO CHANGE!!! +++++++++++++++++++++++++++
     uint64_t targetFrame = 0, targetFrameParent = 0, maxDistance = 0,
             maxFrameVisited = 0, maxDistanceFrame = 0, distanceParent = 0,
             targetVirtualAddress = 0, maxDistanceVirtualAddress = 0;
@@ -170,26 +165,11 @@ void VMinitialize() {
     clearTable(0);
 }
 
-
 int VMread(uint64_t virtualAddress, word_t* value) {
 
 
-
-    int max_frame_index = 0;
-
-
-    return 1;
-}
-
-
-int VMwrite(uint64_t virtualAddress, word_t value)
-{
-    // separate the offset and actual pages' virtual addresses sequence
     uint64_t offset = getOffset(virtualAddress);
-    uint64_t fullVirtualAddress = (virtualAddress >> OFFSET_WIDTH);
-
-    std::cout << "input :" << virtualAddress << " offset : " << offset <<
-         " address : " << fullVirtualAddress << std::endl;
+    uint64_t fullVirtualAddress = virtualAddress >> (OFFSET_WIDTH);
 
     // initialize and set pages' addresses table
     uint64_t pagesAddresses[TABLES_DEPTH] = {0};
@@ -224,29 +204,58 @@ int VMwrite(uint64_t virtualAddress, word_t value)
             addr2 = frameIndex;
         }
         addr1 = addr2;
-        std::cout << "addr1 : " << (int)addr1 << std::endl;
     }
 
     if(addr2 < 0) return 0;
-    PMwrite(addr2 * PAGE_SIZE + offset, value);
+    PMread(addr2 * PAGE_SIZE + offset, value);
     return 1;
 }
 
 
+int VMwrite(uint64_t virtualAddress, word_t value)
+{
+    // separate the offset and actual pages' virtual addresses sequence
+    uint64_t offset = getOffset(virtualAddress);
+    uint64_t fullVirtualAddress = (virtualAddress >> OFFSET_WIDTH);
 
+    // initialize and set pages' addresses table
+    uint64_t pagesAddresses[TABLES_DEPTH] = {0};
+    createAddressTable(fullVirtualAddress, pagesAddresses);
 
+    // set traverse values
+    uint64_t rootFrame = 0;
+    word_t addr1 = rootFrame;
+    word_t addr2;
 
+    // iterate through the addresses as the algorithm showed in the docs
+    for (int i = 0; i < TABLES_DEPTH; i++)
+    {
+        PMread((addr1 * PAGE_SIZE) + pagesAddresses[i], &addr2);
 
-// Example: input 70
-//          70 >> 4 ( == 4) == 1000110 >> 4 == 100 ( == 4)
+        if (addr2 == 0)
+        {
+            // findEmptyFrame --> dfs + clearTable;
+            uint64_t frameIndex = findEmptyFrame(fullVirtualAddress); // f1 -
+            // frameIndex1
 
+            if(i+1 < TABLES_DEPTH)
+            {
+                clearTable(frameIndex);
+            }
+            else
+            {
+                PMrestore(frameIndex, fullVirtualAddress);
+            }
 
-
-
-
-
-
-
+            PMwrite((addr1 * PAGE_SIZE) + pagesAddresses[i], frameIndex);
+            addr2 = frameIndex;
+        }
+        addr1 = addr2;
+    }
+    if(addr2 < 0) return 0;
+    PMwrite(addr2 * PAGE_SIZE + offset, value);
+    return 1;
+}
 
 
 
