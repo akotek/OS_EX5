@@ -2,7 +2,6 @@
 #include "PhysicalMemory.h"
 #include <iostream>
 #include <cmath>
-
 using namespace std;
 
 
@@ -13,10 +12,6 @@ void clearTable(uint64_t frameIndex) {
         PMwrite(frameIndex * PAGE_SIZE + i, 0);
     }
 }
-
-void createAddressTable(uint64_t fullVirtualAddress, uint64_t
-pagesAddresses[TABLES_DEPTH]);
-
 
 
 
@@ -39,7 +34,10 @@ pagesAddresses[TABLES_DEPTH])
     }
 }
 
-
+uint64_t abs_uint64(const uint64_t a, const uint64_t b)
+{
+    return (a > b) ? a - b : b - a;
+}
 
 
 void dfs(
@@ -54,6 +52,7 @@ void dfs(
 
     int emptySlotCounter = 0;
     word_t rowValue;
+
 
     // iterate through all rows of the current currentFrame
     for (uint64_t i = 0; i < PAGE_SIZE; i++)
@@ -73,10 +72,9 @@ void dfs(
         // if we reached the end of the pm
         if(currentDepth == TABLES_DEPTH)
         {
+            uint64_t absValue = abs_uint64(virtualAddress, fullVirtualAddress);
             // calculate cyclical distance as shown in the pdf
-            uint64_t cyclicalDistance = (uint64_t)min(NUM_PAGES -
-                                  abs(virtualAddress - fullVirtualAddress),
-                                  abs(virtualAddress - fullVirtualAddress));
+            uint64_t cyclicalDistance = (uint64_t)min((uint64_t)(NUM_PAGES - absValue), absValue);
 
             // if cyclicalDistance is maximal, swap the frame before use
             if(cyclicalDistance > maxDistance)
